@@ -19,6 +19,13 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 INSTANCE_DIR.mkdir(exist_ok=True)
 
 app = Flask(__name__)
+@app.template_filter("from_json")
+def from_json(value):
+    import json
+    try:
+        return json.loads(value)
+    except Exception:
+        return None
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + str(INSTANCE_DIR / "krishibandhu.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

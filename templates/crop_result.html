@@ -4,7 +4,7 @@
 
 <div class="card">
 
-    <h1>AI Crop Assessment</h1>
+    <h1>🌱 AI Crop Assessment</h1>
 
     {% if report.image_path %}
         <img
@@ -15,31 +15,98 @@
     {% endif %}
 
     <div class="card">
+        <h2>🌿 Assessment Result</h2>
 
-        <h2>🌱 AI Assessment</h2>
+        {% set result = report.ai_result | from_json %}
 
-        <pre class="result">{{ report.ai_result }}</pre>
+        {% if result %}
+
+            <div class="assessment-grid">
+
+                {% if result.crop_identified %}
+                    <div class="result-box">
+                        <span class="result-label">🌱 Crop Identified</span>
+                        <strong>{{ result.crop_identified }}</strong>
+                    </div>
+                {% endif %}
+
+                {% if result.possible_issue %}
+                    <div class="result-box">
+                        <span class="result-label">⚠️ Possible Issue</span>
+                        <strong>{{ result.possible_issue }}</strong>
+                    </div>
+                {% endif %}
+
+                {% if result.confidence_percent is not none %}
+                    <div class="result-box">
+                        <span class="result-label">📊 Confidence</span>
+                        <strong>{{ result.confidence_percent }}%</strong>
+                    </div>
+                {% endif %}
+
+            </div>
+
+            {% if result.observed_symptoms %}
+                <div class="info-section">
+                    <h3>🔍 Observed Symptoms</h3>
+                    <p>{{ result.observed_symptoms }}</p>
+                </div>
+            {% endif %}
+
+            {% if result.advisory %}
+                <div class="info-section">
+                    <h3>💡 Advisory</h3>
+                    <p>{{ result.advisory }}</p>
+                </div>
+            {% endif %}
+
+            {% if result.escalation_needed %}
+                <div class="expert-alert">
+                    <h3>👨‍🌾 Expert Consultation Recommended</h3>
+                    <p>
+                        The AI recommends consulting an agricultural expert
+                        for further verification.
+                    </p>
+
+                    <a class="btn" href="{{ url_for('experts') }}">
+                        Consult Agricultural Expert
+                    </a>
+                </div>
+            {% endif %}
+
+        {% else %}
+
+            <div class="info-section">
+                <p>{{ report.ai_result }}</p>
+            </div>
+
+        {% endif %}
 
     </div>
 
-    <p>
-        <strong>Confidence:</strong>
+    <div class="result-summary">
 
-        {% if report.confidence is not none %}
-            {{ report.confidence }}%
-        {% else %}
-            Not available
-        {% endif %}
-    </p>
+        <p>
+            <strong>📊 Confidence:</strong>
 
-    <p>
-        <strong>Status:</strong>
-        {{ report.status }}
-    </p>
+            {% if report.confidence is not none %}
+                {{ report.confidence }}%
+            {% else %}
+                Not available
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>📌 Status:</strong>
+            {{ report.status }}
+        </p>
+
+    </div>
+
 
     {% if report.confidence is not none and report.confidence < 70 %}
 
-        <div class="card">
+        <div class="card warning-card">
 
             <h3>⚠️ AI Confidence is Low</h3>
 
@@ -49,7 +116,7 @@
             </p>
 
             <a class="btn" href="{{ url_for('experts') }}">
-                Send to Agricultural Expert
+                👨‍🌾 Send to Agricultural Expert
             </a>
 
         </div>
@@ -66,7 +133,7 @@
             </p>
 
             <a class="btn" href="{{ url_for('experts') }}">
-                Consult Agricultural Expert
+                👨‍🌾 Consult Agricultural Expert
             </a>
 
         </div>

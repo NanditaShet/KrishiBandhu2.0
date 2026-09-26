@@ -214,6 +214,7 @@ def crop_health():
 def analyze_crop(path, crop, desc, voice):
 
     key = os.getenv("GEMINI_API_KEY")
+    print("GEMINI KEY PRESENT:", bool(key), flush=True)
 
     if not key:
         return "Add GEMINI_API_KEY to .env to enable live AI analysis.", None
@@ -227,9 +228,14 @@ def analyze_crop(path, crop, desc, voice):
         client = genai.Client(api_key=key)
 
         prompt = f"""
+
 You are an agricultural decision-support assistant.
 
-Crop: {crop}
+The farmer may submit ANY crop.
+
+Do not assume that the crop is arecanut, paddy, tomato, or any specific crop.
+
+Crop selected by farmer: {crop}
 
 Farmer description: {desc}
 
@@ -237,9 +243,16 @@ Voice transcription: {voice}
 
 Analyze the uploaded crop image.
 
+First identify the crop visible in the image. Then identify any possible disease,
+pest, nutrient deficiency, environmental problem, or other visible issue.
+
+If the selected crop and the crop visible in the image are different,
+mention both, but do NOT automatically treat this as an error.
+
 Return ONLY valid JSON in this format:
 
 {{
+  "crop_identified": "crop visible in image",
   "possible_issue": "possible crop issue",
   "confidence_percent": 75,
   "observed_symptoms": "symptoms observed in the image",
@@ -248,8 +261,11 @@ Return ONLY valid JSON in this format:
 }}
 
 Never claim a confirmed diagnosis.
+
 Do not provide dangerous pesticide dosage instructions.
+
 Recommend an agricultural expert when uncertain.
+
 """
 
         contents = [prompt]
@@ -280,6 +296,8 @@ Recommend an agricultural expert when uncertain.
 
                 error_message = str(e)
 
+                print("GEMINI ERROR:", repr(e), flush=True)
+
                 if "503" in error_message and attempt < 2:
                     time.sleep(3)
 
@@ -295,7 +313,6 @@ Recommend an agricultural expert when uncertain.
 
         try:
 
-            # Remove Markdown code fences returned by Gemini
             cleaned = out.strip()
 
             if cleaned.startswith("```json"):
@@ -309,14 +326,11 @@ Recommend an agricultural expert when uncertain.
 
             cleaned = cleaned.strip()
 
-            # Convert Gemini response into JSON
             obj = json.loads(cleaned)
 
-            # Extract confidence
             if obj.get("confidence_percent") is not None:
                 conf = float(obj.get("confidence_percent"))
 
-            # Store clean formatted JSON
             out = json.dumps(
                 obj,
                 ensure_ascii=False,
@@ -324,12 +338,14 @@ Recommend an agricultural expert when uncertain.
             )
 
         except Exception:
-            # Keep original response if parsing fails
             pass
 
         return out, conf
 
     except Exception as e:
+
+        print("GEMINI OUTER ERROR:", repr(e), flush=True)
+
         return f"AI service error: {e}", None
 @app.route("/crop-result/<int:rid>")
 @required("farmer")

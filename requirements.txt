@@ -5,3 +5,4 @@ requests>=2.32
 google-genai>=1.30
 razorpay>=1.4
 Werkzeug>=3.1
+gunicorn

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Welcome, {{ current_user.name }}</h1>
+
+<p>
+    {{ current_user.location or 'Location not added' }}
+    ·
+    {{ profile.crop if profile else 'Crop not added' }}
+</p>
+
+<div class="grid">
+
+    <div class="card">
+        <h2>
+            🌿 <span data-translate="Crop Health">Crop Health</span>
+        </h2>
+
+        <p>
+            AI-assisted crop image assessment.
+        </p>
+
+        <a class="btn" href="{{ url_for('crop_health') }}">
+            Analyze Crop
+        </a>
+    </div>
+
+
+    <div class="card">
+        <h2>
+            👩‍🔬 <span data-translate="Experts">Experts</span>
+        </h2>
+
+        <p>
+            See expert profiles and consultation prices.
+        </p>
+
+        <a class="btn" href="{{ url_for('experts') }}">
+            Find Experts
+        </a>
+    </div>
+
+
+    <div class="card">
+        <h2>
+            🛒 <span data-translate="Sell Crop">Sell Crop</span>
+        </h2>
+
+        <p>
+            List produce for customers.
+        </p>
+
+        <a class="btn" href="{{ url_for('new_product') }}">
+            List Produce
+        </a>
+    </div>
+
+
+    <div class="card">
+        <h2>
+            🌦️ <span data-translate="Weather">Weather</span>
+        </h2>
+
+        <p>
+            Live weather for your location.
+        </p>
+
+        <a class="btn" href="{{ url_for('weather') }}">
+            Open Weather
+        </a>
+    </div>
+
+
+    <div class="card">
+        <h2>
+            📦 <span data-translate="Orders">Orders</span>
+        </h2>
+
+        <p>
+            See customer purchases and transport.
+        </p>
+
+        <a class="btn" href="{{ url_for('farmer_orders') }}">
+            Orders
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

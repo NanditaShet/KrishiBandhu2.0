@@ -1,0 +1,1 @@
+{%extends "base.html"%}{%block content%}<div class="auth card"><h1>{{role.title()}} Login</h1><form method="post"><label>Email</label><input name="email" type="email" required><label>Password</label><input name="password" type="password" required><button class="btn">Login</button></form><p><a href="{{url_for('register',role=role)}}">Create account</a></p></div>{%endblock%}

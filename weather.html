@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+
+    <h1>
+        🌦️ <span data-translate="Live Weather">Live Weather</span>
+    </h1>
+
+    <p>
+        <span data-translate="Profile location:">Profile location:</span>
+        {{ current_user.location or 'not set' }}
+    </p>
+
+    <button class="btn" onclick="loadWeather()">
+        🔄 <span data-translate="Refresh Forecast">Refresh Forecast</span>
+    </button>
+
+    <div id="weather">
+        <p>Loading...</p>
+    </div>
+
+</div>
+
+
+<script>
+
+async function loadWeather() {
+
+    const weatherBox = document.getElementById("weather");
+
+    weatherBox.innerHTML =
+        "<p>ಹವಾಮಾನ ಮಾಹಿತಿಯನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...</p>";
+
+    try {
+
+        const response =
+            await fetch("{{ url_for('api_weather') }}");
+
+        const data =
+            await response.json();
+
+        if (data.error) {
+
+            weatherBox.innerHTML =
+                `<p>${data.error}</p>`;
+
+            return;
+        }
+
+
+        const current = data.weather.current;
+
+
+        weatherBox.innerHTML = `
+
+            <div class="grid">
+
+                <div class="card">
+                    <h3>🌡️ ತಾಪಮಾನ</h3>
+                    <p>
+                        ${current.temperature_2m} °C
+                    </p>
+                </div>
+
+
+                <div class="card">
+                    <h3>💧 ಆರ್ದ್ರತೆ</h3>
+                    <p>
+                        ${current.relative_humidity_2m}%
+                    </p>
+                </div>
+
+
+                <div class="card">
+                    <h3>🌧️ ಪ್ರಸ್ತುತ ಮಳೆ</h3>
+                    <p>
+                        ${current.precipitation} mm
+                    </p>
+                </div>
+
+
+                <div class="card">
+                    <h3>💨 ಗಾಳಿಯ ವೇಗ</h3>
+                    <p>
+                        ${current.wind_speed_10m} km/h
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="card" style="margin-top:20px;">
+
+                <h2>🌧️ ಮಳೆ / ಬಿರುಗಾಳಿ ಸ್ಥಿತಿ</h2>
+
+                <p id="weatherStatus">
+                    ಹವಾಮಾನ ಮುನ್ನೋಟವನ್ನು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...
+                </p>
+
+            </div>
+
+
+            <p style="margin-top:20px;">
+                ಮೂಲ: Open-Meteo
+            </p>
+
+        `;
+
+
+        /*
+         * If forecast information is available from the backend,
+         * calculate the upcoming weather status.
+         */
+
+        if (data.weather.hourly) {
+
+    const hourly = data.weather.hourly;
+
+    const rain = hourly.precipitation_probability || [];
+
+    const wind = hourly.wind_speed_10m || [];
+
+    const weatherCodes = hourly.weather_code || [];
+
+    const nextHours = Math.min(
+        12,
+        Math.max(
+            rain.length,
+            wind.length,
+            weatherCodes.length
+        )
+    );
+
+
+            let maxRain = 0;
+            let maxWind = 0;
+
+
+            for (let i = 0; i < nextHours; i++) {
+
+                if (rain[i] !== undefined) {
+                    maxRain = Math.max(
+                        maxRain,
+                        Number(rain[i]) || 0
+                    );
+                }
+
+                if (wind[i] !== undefined) {
+                    maxWind = Math.max(
+                        maxWind,
+                        Number(wind[i]) || 0
+                    );
+                }
+
+            }
+
+let status = "";
+
+let hasThunderstorm = false;
+
+for (let i = 0; i < nextHours; i++) {
+
+    const code = Number(weatherCodes[i]);
+
+    // Open-Meteo thunderstorm codes
+    if (code >= 95 && code <= 99) {
+        hasThunderstorm = true;
+        break;
+    }
+}
+
+
+if (hasThunderstorm && maxRain >= 50) {
+
+    status =
+        "⛈️ ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಗುಡುಗು ಸಹಿತ ಮಳೆಯ ಸಾಧ್ಯತೆ ಇದೆ.";
+
+}
+else if (hasThunderstorm) {
+
+    status =
+        "⛈️ ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಗುಡುಗು ಮತ್ತು ಬಿರುಗಾಳಿಯ ಸಾಧ್ಯತೆ ಇದೆ.";
+
+}
+else if (maxRain >= 80) {
+
+    status =
+        "🌧️ ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಭಾರೀ ಮಳೆಯ ಸಾಧ್ಯತೆ ಇದೆ.";
+
+}
+else if (maxRain >= 50) {
+
+    status =
+        "🌧️ ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಮಳೆಯ ಸಾಧ್ಯತೆ ಹೆಚ್ಚು.";
+
+}
+else if (maxRain >= 30) {
+
+    status =
+        "🌦️ ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಮಳೆಯ ಸಾಧ್ಯತೆ ಇದೆ.";
+
+}
+else if (maxWind >= 40) {
+
+    status =
+        "💨 ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಬಲವಾದ ಗಾಳಿಯ ಸಾಧ್ಯತೆ ಇದೆ.";
+
+}
+else {
+
+    status =
+        "☀️ ಮುಂದಿನ ಕೆಲವು ಗಂಟೆಗಳಲ್ಲಿ ಮಳೆಯ ಅಥವಾ ಬಲವಾದ ಗಾಳಿಯ ಸಾಧ್ಯತೆ ಕಡಿಮೆ.";
+
+}
+
+
+            document.getElementById(
+                "weatherStatus"
+            ).innerText = status;
+
+        }
+        else {
+
+            document.getElementById(
+                "weatherStatus"
+            ).innerText =
+                "ಮುಂದಿನ ಹವಾಮಾನ ಮುನ್ನೋಟ ಲಭ್ಯವಿಲ್ಲ.";
+
+        }
+
+    }
+
+    catch (error) {
+
+        weatherBox.innerHTML =
+            "<p>ಹವಾಮಾನ ಮಾಹಿತಿಯನ್ನು ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</p>";
+
+        console.error(error);
+
+    }
+
+}
+
+
+loadWeather();
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,1 @@
+{%extends "base.html"%}{%block content%}<h1>My Purchases</h1>{%for o in orders%}<div class="card"><h3>Order #{{o.id}} · {{o.product.name}}</h3><p>{{o.quantity_kg}} kg · ₹{{o.total_amount}} · {{o.status}}</p><p>Farmer: {{o.farmer.name}}</p></div>{%else%}<div class="card">No purchases yet.</div>{%endfor%}{%endblock%}
